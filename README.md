@@ -41,7 +41,7 @@ Danh mục hiển thị số lượng đã bán từ các đơn hoàn tất và 
 
 ## Chatbot miễn phí chạy trên máy
 
-Cài [Ollama cho Windows](https://docs.ollama.com/windows) và chạy `ollama pull qwen2.5:1.5b`. Ollama chạy tại cổng 11434. Có thể đặt biến `Ollama__Model` thành tên mô hình đã tải trước khi chạy ShopManager.
+Cài [Ollama cho Windows](https://docs.ollama.com/windows) và chạy `ollama pull qwen3:8b`. Ollama chạy tại cổng 11434. Có thể đặt biến `Ollama__Model` thành tên mô hình đã tải trước khi chạy ShopManager, ví dụ `qwen2.5:1.5b` cho máy ít RAM.
 
 Khách dùng **Tư vấn AI** để hỏi về sản phẩm và giá. Quản lý dùng **Trợ lý AI** để đọc doanh thu 7 ngày, đơn chờ giao và hàng sắp hết. Chatbot chạy cục bộ, không cần API key, chỉ đọc dữ liệu và không nhận thông tin định danh khách hàng từ đơn hàng.
 

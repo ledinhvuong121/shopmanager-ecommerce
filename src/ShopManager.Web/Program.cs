@@ -45,7 +45,7 @@ builder.Services.AddHttpClient<ShopAssistant>(client =>
 {
     client.BaseAddress = new Uri("http://127.0.0.1:11434/");
     client.Timeout = TimeSpan.FromSeconds(90);
-});
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseProxy = false });
 builder.Services.AddHttpClient<MomoSandbox>(client =>
 {
     client.BaseAddress = new Uri("https://test-payment.momo.vn/");

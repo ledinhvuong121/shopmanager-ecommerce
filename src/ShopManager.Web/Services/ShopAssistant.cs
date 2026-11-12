@@ -33,11 +33,13 @@ public class ShopAssistant(HttpClient client, IConfiguration configuration, AppD
             ? "Bạn là trợ lý quản lý ShopManager. Giải thích doanh thu 7 ngày, đơn chờ giao, hàng sắp hết và đề xuất việc xử lý. Chỉ đọc số liệu. Hướng dẫn dùng các mục Tổng quan, Đơn hàng và Kho hàng khi cần thao tác."
             : "Bạn tư vấn mua hàng cho ShopManager. Gợi ý sản phẩm theo nhu cầu và ngân sách từ danh mục được cung cấp. Giá tính theo VND. Không suy đoán thành phần, dị ứng, tính năng hoặc sản phẩm ngoài danh mục.";
 
+        var model = configuration["Ollama:Model"] ?? "qwen3:8b";
         try
         {
             using var response = await client.PostAsJsonAsync("api/chat", new
             {
-                model = configuration["Ollama:Model"] ?? "qwen2.5:1.5b",
+                model,
+                think = model.StartsWith("qwen3:", StringComparison.OrdinalIgnoreCase) ? (bool?)false : null,
                 stream = false,
                 options = new { num_predict = 400 },
                 messages = new[]
