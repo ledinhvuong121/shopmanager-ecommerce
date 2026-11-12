@@ -141,7 +141,7 @@ public class OrdersController(AppDbContext db, OrderService service, UserManager
             ViewBag.UnitsSold = await db.OrderItems.Where(x => x.SaleOrder.Status == OrderStatus.Completed)
                 .GroupBy(x => x.ProductId).ToDictionaryAsync(g => g.Key, g => g.Sum(x => (long)x.Quantity));
             ViewBag.Ratings = await db.ProductReviews.GroupBy(x => x.ProductId)
-                .ToDictionaryAsync(g => g.Key, g => g.Average(x => (double)x.Rating));
+                .ToDictionaryAsync(g => g.Key, g => new ProductRating(g.Count(), g.Average(x => (double)x.Rating)));
             return;
         }
         ViewBag.Customers = new SelectList(await db.Customers.AsNoTracking().OrderBy(x => x.Name).Select(x => new { x.Id, Name = x.Name + " · " + x.Phone }).ToListAsync(), "Id", "Name");

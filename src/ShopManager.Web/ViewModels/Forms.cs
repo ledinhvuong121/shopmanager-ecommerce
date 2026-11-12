@@ -103,5 +103,6 @@ public class DashboardVm
     public List<DailyRevenue> Days { get; set; } = [];
     public List<TopProduct> TopProducts { get; set; } = [];
 }
+public record ProductRating(int Count, double Average);
 public record DailyRevenue(DateTime Date, decimal Revenue);
 public record TopProduct(string Name, int Quantity, decimal Revenue);

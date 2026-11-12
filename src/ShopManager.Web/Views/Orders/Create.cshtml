@@ -7,7 +7,7 @@
     var cartKey = guest ? "shopmanager-cart:guest" :
         customer ? "shopmanager-cart:" + User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value : null;
     var unitsSold = ViewBag.UnitsSold as Dictionary<int, long>;
-    var ratings = ViewBag.Ratings as Dictionary<int, double>;
+    var ratings = ViewBag.Ratings as Dictionary<int, ProductRating>;
 }
 @{ ViewData["Title"] = cartOnly ? "Giỏ hàng" : storefront ? "Mua hàng" : "Bán hàng"; var products = (List<Product>)ViewBag.Products; var vi = CultureInfo.GetCultureInfo("vi-VN"); }
 <div class="page-heading"><div><div class="eyebrow">@(storefront ? "CỬA HÀNG" : "QUẦY BÁN HÀNG")</div><h1>@(cartOnly ? "Giỏ hàng" : storefront ? "Mua hàng" : "Tạo đơn bán")</h1><p>@(cartOnly ? "Kiểm tra sản phẩm và tổng tiền trước khi đặt hàng." : storefront ? "Đặt hàng online và thanh toán tiền mặt khi nhận hàng." : "Chọn sản phẩm, kiểm tra giỏ hàng và xác nhận thanh toán.")</p></div>@if (guest)
@@ -43,7 +43,7 @@ else { <a asp-action="Index" class="btn btn-outline-secondary">Lịch sử đơn
         <div class="catalog-feedback">
             <span>Đã bán @(unitsSold!.GetValueOrDefault(p.Id).ToString("N0", vi))</span>
             <a asp-action="Reviews" asp-route-id="@p.Id">
-                @(ratings!.TryGetValue(p.Id, out var rating) ? $"★ {rating.ToString("0.0", vi)}/5" : "Chưa có đánh giá")
+                @(ratings!.TryGetValue(p.Id, out var rating) ? $"★ {rating.Average.ToString("0.0", vi)}/5 · {rating.Count} đánh giá" : "Chưa có đánh giá")
             </a>
         </div>
     }
