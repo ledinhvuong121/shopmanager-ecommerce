@@ -145,6 +145,19 @@ public class OrdersController(AppDbContext db, OrderService service, UserManager
         return RedirectToAction(nameof(Details), new { id });
     }
     [HttpPost, Authorize(Roles = Roles.Manager)]
+    public async Task<IActionResult> StartDelivery(int id)
+    {
+        try
+        {
+            await service.StartDeliveryAsync(id);
+            TempData["Success"] = "Đơn đã chuyển sang đang giao.";
+        }
+        catch (BusinessException ex) { TempData["Error"] = ex.Message; }
+        catch (DbUpdateConcurrencyException) { TempData["Error"] = "Trạng thái đơn vừa thay đổi. Hãy kiểm tra lại."; }
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost, Authorize(Roles = Roles.Manager)]
     public async Task<IActionResult> CompleteDelivery(int id)
     {
         try

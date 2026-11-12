@@ -72,11 +72,20 @@ public class OrderService(AppDbContext db)
         return order.Id;
     }
 
-    public async Task CompleteDeliveryAsync(int orderId)
+    public async Task StartDeliveryAsync(int orderId)
     {
         var order = await db.Orders.FindAsync(orderId);
         if (order is null || order.Status != OrderStatus.AwaitingDelivery)
-            throw new BusinessException("Đơn không còn chờ giao hàng.");
+            throw new BusinessException("Chỉ đơn chờ giao mới có thể bắt đầu giao hàng.");
+        order.Status = OrderStatus.OutForDelivery;
+        await db.SaveChangesAsync();
+    }
+
+    public async Task CompleteDeliveryAsync(int orderId)
+    {
+        var order = await db.Orders.FindAsync(orderId);
+        if (order is null || order.Status != OrderStatus.OutForDelivery)
+            throw new BusinessException("Chỉ xác nhận giao thành công khi đơn đang giao.");
         order.CashReceived = order.Total;
         order.PaidAt = DateTime.UtcNow;
         order.Status = OrderStatus.Completed;

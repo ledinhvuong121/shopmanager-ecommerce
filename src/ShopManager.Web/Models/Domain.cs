@@ -46,7 +46,7 @@ public class Customer
     [MaxLength(250)] public string? Address { get; set; }
 }
 
-public enum OrderStatus { Completed, Cancelled, AwaitingDelivery }
+public enum OrderStatus { Completed, Cancelled, AwaitingDelivery, OutForDelivery }
 public enum MovementType { Receipt, Sale, Cancellation }
 
 public class SaleOrder

@@ -80,6 +80,11 @@ public class SalesTests(SqlFixture fixture) : IClassFixture<SqlFixture>
         Assert.Equal(0, order.CashReceived);
         Assert.Equal(8, (await db.Products.FindAsync(product.Id))!.Stock);
 
+        await Assert.ThrowsAsync<BusinessException>(() => service.CompleteDeliveryAsync(id));
+        Assert.Equal(0, order.CashReceived);
+        await service.StartDeliveryAsync(id);
+        Assert.Equal(OrderStatus.OutForDelivery, order.Status);
+        Assert.Null(order.PaidAt);
         await service.CompleteDeliveryAsync(id);
         Assert.Equal(OrderStatus.Completed, order.Status);
         Assert.NotNull(order.PaidAt);
