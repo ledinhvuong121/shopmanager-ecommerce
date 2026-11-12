@@ -1,0 +1,3 @@
+@model List<Category>
+@{ ViewData["Title"] = "Danh mục"; }
+<div class="page-heading"><div><div class="eyebrow">SẮP XẾP HÀNG HÓA</div><h1>Danh mục sản phẩm</h1><p>Phân nhóm để quản lý cửa hàng dễ dàng hơn.</p></div><a asp-action="Edit" class="btn btn-primary">＋ Thêm danh mục</a></div><section class="panel"><table class="table"><thead><tr><th>Tên danh mục</th><th></th></tr></thead><tbody>@foreach (var c in Model) { <tr><td><strong>@c.Name</strong></td><td class="text-end"><a asp-action="Edit" asp-route-id="@c.Id">Chỉnh sửa</a></td></tr> } @if (Model.Count == 0) { <tr><td class="empty-cell" colspan="2">Chưa có danh mục.</td></tr> }</tbody></table></section>

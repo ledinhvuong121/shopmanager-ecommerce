@@ -1,0 +1,6 @@
+@model IPageModel
+@{ int currentPage = Model.Page; int pages = Model.TotalPages; string? search = Model.Search; }
+<nav class="pagination-bar" aria-label="Phân trang"><span>@Model.TotalCount kết quả · Trang @currentPage / @pages</span><div>
+@if (currentPage > 1) { <a class="btn btn-sm btn-outline-secondary" asp-route-page="@(currentPage - 1)" asp-route-search="@search" asp-route-status="@ViewBag.Status">← Trước</a> }
+@if (currentPage < pages) { <a class="btn btn-sm btn-outline-secondary" asp-route-page="@(currentPage + 1)" asp-route-search="@search" asp-route-status="@ViewBag.Status">Sau →</a> }
+</div></nav>

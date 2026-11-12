@@ -1,0 +1,18 @@
+@model PagedList<ProductReview>
+@{ ViewData["Title"] = "Đánh giá sản phẩm"; }
+<div class="page-heading">
+    <div><h1>@ViewBag.ProductName</h1><p>@Model.TotalCount đánh giá</p></div>
+    <a asp-action="Create" class="btn btn-outline-secondary">Quay lại mua hàng</a>
+</div>
+<section class="panel p-4">
+    @if (Model.Items.Count == 0) { <p class="mb-0">Sản phẩm chưa có đánh giá.</p> }
+    @foreach (var review in Model.Items)
+    {
+        <article class="border-bottom py-3">
+            <strong>@review.Rating/5 sao</strong>
+            <small class="subtle d-block">@VietnamTime.Format(review.CreatedAt)</small>
+            @if (!string.IsNullOrWhiteSpace(review.Comment)) { <p class="mb-0 text-break">@review.Comment</p> }
+        </article>
+    }
+    <partial name="_Pagination" />
+</section>
