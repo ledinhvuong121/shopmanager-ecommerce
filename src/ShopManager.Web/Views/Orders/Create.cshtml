@@ -10,6 +10,24 @@
     var ratings = ViewBag.Ratings as Dictionary<int, ProductRating>;
 }
 @{ ViewData["Title"] = cartOnly ? "Giỏ hàng" : storefront ? "Mua hàng" : "Bán hàng"; var products = (List<Product>)ViewBag.Products; var vi = CultureInfo.GetCultureInfo("vi-VN"); }
+@if (storefront && !cartOnly)
+{
+    <section class="shop-hero">
+        <div>
+            <h1>Cửa hàng tiện lợi</h1>
+            <p>Đồ uống, thực phẩm và đồ dùng hằng ngày. Đặt online, thanh toán khi nhận hàng.</p>
+            <a href="#shop-products" class="btn btn-light">Xem sản phẩm</a>
+        </div>
+        <div class="shop-hero-products" aria-hidden="true">
+            @foreach (var sku in new[] { "DR001", "FD002", "DR002" })
+            {
+                <img src="@ProductImages.Find(sku)" alt="" />
+            }
+        </div>
+    </section>
+}
+else
+{
 <div class="page-heading"><div><div class="eyebrow">@(storefront ? "CỬA HÀNG" : "QUẦY BÁN HÀNG")</div><h1>@(cartOnly ? "Giỏ hàng" : storefront ? "Mua hàng" : "Tạo đơn bán")</h1><p>@(cartOnly ? "Kiểm tra sản phẩm và tổng tiền trước khi đặt hàng." : storefront ? "Đặt hàng online và thanh toán tiền mặt khi nhận hàng." : "Chọn sản phẩm, kiểm tra giỏ hàng và xác nhận thanh toán.")</p></div>@if (guest)
 {
     <div class="d-flex gap-2">
@@ -30,8 +48,9 @@ else { <a asp-action="Index" class="btn btn-outline-secondary">Lịch sử đơn
     }
 }
 </div>
+}
 <div asp-validation-summary="All" class="alert alert-danger validation-summary"></div>
-<div class="@(cartOnly ? "cart-page" : "pos-grid")"><section id="shop-products" hidden="@cartOnly"><div class="pos-search"><label class="visually-hidden" for="product-search">Tìm sản phẩm</label><input id="product-search" type="search" class="form-control" placeholder="Tìm sản phẩm theo tên hoặc mã…" />@if (storefront)
+<div class="@(cartOnly ? "cart-page" : storefront ? "shop-catalog" : "pos-grid")"><section id="shop-products" hidden="@cartOnly"><div class="pos-search"><label class="visually-hidden" for="product-search">Tìm sản phẩm</label><input id="product-search" type="search" class="form-control" placeholder="Tìm sản phẩm theo tên hoặc mã…" />@if (storefront)
 {
     <label for="category-filter" class="visually-hidden">Danh mục</label>
     <select id="category-filter" class="form-select mb-2">
@@ -48,7 +67,7 @@ else { <a asp-action="Index" class="btn btn-outline-secondary">Lịch sử đơn
     var image = ProductImages.Find(p.Sku);
     <div class="catalog-entry">
     <button type="button" class="catalog-card" data-id="@p.Id" data-category="@p.CategoryId" data-search="@p.Name @p.Sku"><div class="catalog-art art-@(p.CategoryId % 4)">@if (image is not null) { <img class="catalog-photo" src="@image" alt="" loading="lazy" referrerpolicy="no-referrer" /> }
-    else { <span aria-hidden="true">▦</span> }<small>@p.Category.Name</small><b>＋</b></div><div class="catalog-info"><small>@p.Sku · Còn @p.Stock</small><strong>@p.Name</strong><span>@p.Price.ToString("N0", vi) ₫</span></div></button>
+    else { <span aria-hidden="true">▦</span> }<small>@p.Category.Name</small><b>＋</b></div><div class="catalog-info"><small>@p.Sku · Còn @p.Stock</small><strong>@p.Name</strong><span>@p.Price.ToString("N0", vi) ₫</span>@if (storefront) { <span class="shop-add">Thêm vào giỏ</span> }</div></button>
     @if (storefront)
     {
         <div class="catalog-feedback">
@@ -61,7 +80,7 @@ else { <a asp-action="Index" class="btn btn-outline-secondary">Lịch sử đơn
     </div>
 }
 </div><div id="no-products" class="empty-state" hidden="@(products.Count > 0)"><h3>Không có sản phẩm phù hợp</h3><p>Thử từ khóa khác.</p></div></section>
-<form method="post" asp-action="Create" asp-route-cartOnly="@cartOnly" id="checkout-form" data-cart-key="@cartKey" data-guest="@guest.ToString().ToLowerInvariant()" class="panel cart-panel"><input asp-for="RequestId" type="hidden" /><div class="panel-heading"><h2>Giỏ hàng <span id="cart-count" class="count-pill">0</span></h2><button id="clear-cart" type="button" class="btn btn-link btn-sm">Xóa giỏ</button></div>@if (!storefront) { <div class="cart-customer"><label asp-for="CustomerId" class="form-label">Khách hàng</label><select asp-for="CustomerId" asp-items="ViewBag.Customers" class="form-select"><option value="">Khách vãng lai</option></select></div> }@if (customer)
+<form method="post" asp-action="Create" asp-route-cartOnly="@cartOnly" id="checkout-form" data-cart-key="@cartKey" data-guest="@guest.ToString().ToLowerInvariant()" class="panel cart-panel" hidden="@(storefront && !cartOnly)"><input asp-for="RequestId" type="hidden" /><div class="panel-heading"><h2>Giỏ hàng <span id="cart-count" class="count-pill">0</span></h2><button id="clear-cart" type="button" class="btn btn-link btn-sm">Xóa giỏ</button></div>@if (!storefront) { <div class="cart-customer"><label asp-for="CustomerId" class="form-label">Khách hàng</label><select asp-for="CustomerId" asp-items="ViewBag.Customers" class="form-select"><option value="">Khách vãng lai</option></select></div> }@if (customer)
 {
     <div class="cart-customer">
         <label asp-for="ShippingAddress" class="form-label"></label>
@@ -82,6 +101,10 @@ else { <a asp-action="Index" class="btn btn-outline-secondary">Lịch sử đơn
     <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("Create", "Orders", new { cartOnly = true })" class="btn btn-primary w-100">Đăng nhập để đặt hàng</a>
 }
 else { <button id="checkout-button" type="submit" class="btn btn-primary w-100">@(customer ? "Đặt hàng" : "Xác nhận thanh toán") →</button> }<small class="cart-note">@(storefront ? "Thanh toán khi nhận hàng (COD)." : "Thanh toán tiền mặt · Tồn kho được kiểm tra khi lưu đơn.")</small></div></form></div>
+@if (storefront && !cartOnly)
+{
+    <p id="shop-cart-notice" class="shop-cart-notice" role="status" hidden></p>
+}
 @section Scripts {
 <script id="catalog-data" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(products.Select(p => new { id = p.Id, name = p.Name, sku = p.Sku, price = p.Price, stock = p.Stock })))</script>
 <script id="initial-cart" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Lines.Select(l => new { productId = l.ProductId, quantity = l.Quantity, expectedPrice = l.ExpectedPrice })))</script>

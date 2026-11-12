@@ -1,4 +1,4 @@
-@{ var current = ViewContext.RouteData.Values["controller"]?.ToString(); var manager = User.IsInRole(Roles.Manager); var customer = User.IsInRole(Roles.Customer); }
+@{ var storefront = User.IsInRole(Roles.Customer) || (User.Identity?.IsAuthenticated != true && ViewContext.RouteData.Values["controller"]?.ToString() == "Orders"); var current = ViewContext.RouteData.Values["controller"]?.ToString(); var manager = User.IsInRole(Roles.Manager); var customer = User.IsInRole(Roles.Customer); }
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -8,8 +8,30 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body>
-if (User.Identity?.IsAuthenticated == true)
+<body class="@(storefront ? "storefront" : null)">
+@if (storefront)
+{
+    <header class="shop-header no-print">
+        <nav class="shop-header-inner" aria-label="Cửa hàng">
+            <a class="brand" asp-controller="Orders" asp-action="Create"><span class="brand-icon">S</span> ShopManager</a>
+            <div class="shop-nav">
+                <a asp-controller="Orders" asp-action="Create">Sản phẩm</a>
+                @if (customer)
+                {
+                    <a asp-controller="Orders" asp-action="Index">Đơn của tôi</a>
+                    <a asp-controller="Account" asp-action="ChangePassword">Đổi mật khẩu</a>
+                    <form asp-controller="Account" asp-action="Logout" method="post"><button class="logout" type="submit">Đăng xuất</button></form>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login">Đăng nhập</a>
+                }
+                <a class="shop-cart-link" asp-controller="Orders" asp-action="Create" asp-route-cartOnly="true">Giỏ hàng <span id="shop-cart-count" class="count-pill" hidden>0</span></a>
+            </div>
+        </nav>
+    </header>
+}
+else if (User.Identity?.IsAuthenticated == true)
 {
     <aside class="sidebar no-print">
         <a class="brand" asp-controller="@(customer ? "Orders" : "Home")" asp-action="@(customer ? "Create" : "Index")"><span class="brand-icon">S</span><span>ShopManager<small>@(customer ? "MUA HÀNG" : "QUẢN LÝ CỬA HÀNG")</small></span></a>
@@ -38,8 +60,8 @@ if (User.Identity?.IsAuthenticated == true)
         <div class="sidebar-bottom"><span class="role-pill">@(manager ? "Quản lý" : customer ? "Khách hàng" : "Nhân viên")</span><a asp-controller="Account" asp-action="ChangePassword">Đổi mật khẩu</a><form asp-controller="Account" asp-action="Logout" method="post"><button class="logout" type="submit">Đăng xuất ↗</button></form></div>
     </aside>
 }
-<div class="@(User.Identity?.IsAuthenticated == true ? "app-shell" : "guest-shell")">
-    @if (User.Identity?.IsAuthenticated == true) {
+<div class="@(storefront ? "shop-shell" : User.Identity?.IsAuthenticated == true ? "app-shell" : "guest-shell")">
+    @if (!storefront && User.Identity?.IsAuthenticated == true) {
         <header class="topbar no-print"><div class="breadcrumb-text">Cửa hàng <span>/</span> @ViewData["Title"]</div><div class="topbar-right"><span class="today">@VietnamTime.Today.ToString("dd/MM/yyyy")</span><span class="avatar">@(manager ? "QL" : customer ? "KH" : "NV")</span></div></header>
     }
     <main>
@@ -47,7 +69,7 @@ if (User.Identity?.IsAuthenticated == true)
         @if (TempData["Error"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
         @RenderBody()
     </main>
-    <footer class="app-footer no-print">ShopManager <span>•</span> Quản lý đơn giản, bán hàng thuận tiện.</footer>
+    <footer class="app-footer no-print">ShopManager <span>•</span> @(storefront ? "Thanh toán khi nhận hàng" : "Quản lý đơn giản, bán hàng thuận tiện.")</footer>
 </div>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
