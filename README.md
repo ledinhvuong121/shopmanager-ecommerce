@@ -39,6 +39,12 @@ Danh mục hiển thị số lượng đã bán từ các đơn hoàn tất và 
 - [HH001](https://bizweb.dktcdn.net/thumb/1024x1024/100/478/273/products/208819.jpg?v=1730360226403)
 - [HH002](https://product.hstatic.net/200000077081/product/pu-facial_tissue_pulppy_180_b16f86876e5b4369b10fcc853a059e7a_1024x1024.jpg)
 
+## Chatbot miễn phí chạy trên máy
+
+Cài [Ollama cho Windows](https://docs.ollama.com/windows) và chạy `ollama pull qwen2.5:1.5b`. Ollama chạy tại cổng 11434. Có thể đặt biến `Ollama__Model` thành tên mô hình đã tải trước khi chạy ShopManager.
+
+Khách dùng **Tư vấn AI** để hỏi về sản phẩm và giá. Quản lý dùng **Trợ lý AI** để đọc doanh thu 7 ngày, đơn chờ giao và hàng sắp hết. Chatbot chạy cục bộ, không cần API key, chỉ đọc dữ liệu và không nhận thông tin định danh khách hàng từ đơn hàng.
+
 ## Cài đặt trên máy khác
 
 1. Cài .NET SDK 10 và SQL Server (Developer/Express hoặc LocalDB). Visual Studio phải hỗ trợ .NET 10; cũng có thể dùng VS Code.

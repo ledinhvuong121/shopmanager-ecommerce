@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using ShopManager.Web.Data;
 using ShopManager.Web.Models;
@@ -35,6 +36,16 @@ builder.Services.ConfigureApplicationCookie(o =>
         }
     };
 });
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddConcurrencyLimiter("assistant", limiter => limiter.PermitLimit = 2);
+});
+builder.Services.AddHttpClient<ShopAssistant>(client =>
+{
+    client.BaseAddress = new Uri("http://127.0.0.1:11434/");
+    client.Timeout = TimeSpan.FromSeconds(90);
+});
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<ReportService>();
 CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
@@ -63,6 +74,7 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 app.Run();
 public partial class Program { }

@@ -1,0 +1,21 @@
+@{
+    var manager = ViewBag.Manager is true;
+    ViewData["Title"] = manager ? "Trợ lý quản lý" : "Tư vấn mua hàng";
+}
+<section class="panel form-panel">
+    <h1>@ViewData["Title"]</h1>
+    <p>@(manager ? "Hỏi về doanh thu 7 ngày, đơn chờ giao hoặc hàng sắp hết." : "Hỏi về sản phẩm đang bán, mức giá hoặc lựa chọn phù hợp với nhu cầu.")</p>
+    <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+    @if (ViewBag.Answer is string answer && !string.IsNullOrWhiteSpace(answer))
+    {
+        <div class="border rounded p-3 mb-3">
+            <strong>@ViewBag.Question</strong>
+            <p class="mb-0 mt-2" style="white-space: pre-wrap">@answer</p>
+        </div>
+    }
+    <form asp-action="@(manager ? "Manage" : "Shop")" method="post">
+        <label for="question" class="form-label">Câu hỏi</label>
+        <textarea id="question" name="question" class="form-control" rows="3" maxlength="500" required></textarea>
+        <button type="submit" class="btn btn-primary mt-3">Gửi câu hỏi</button>
+    </form>
+</section>
