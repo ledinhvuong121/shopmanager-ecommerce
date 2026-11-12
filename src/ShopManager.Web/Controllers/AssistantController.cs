@@ -13,13 +13,17 @@ public class AssistantController(ShopAssistant assistant) : Controller
     public IActionResult Shop() => Render(false);
 
     [Authorize(Roles = Roles.Customer), HttpPost, EnableRateLimiting("assistant")]
-    public Task<IActionResult> Shop(string? question, bool widget, CancellationToken cancellation) => Reply(question, false, widget, cancellation);
+    public Task<IActionResult> Shop(string? question, bool widget, string? previousQuestion,
+        string? previousAnswer, CancellationToken cancellation) =>
+        Reply(question, false, widget, previousQuestion, previousAnswer, cancellation);
 
     [Authorize(Roles = Roles.Manager), HttpGet]
     public IActionResult Manage() => Render(true);
 
     [Authorize(Roles = Roles.Manager), HttpPost, EnableRateLimiting("assistant")]
-    public Task<IActionResult> Manage(string? question, bool widget, CancellationToken cancellation) => Reply(question, true, widget, cancellation);
+    public Task<IActionResult> Manage(string? question, bool widget, string? previousQuestion,
+        string? previousAnswer, CancellationToken cancellation) =>
+        Reply(question, true, widget, previousQuestion, previousAnswer, cancellation);
 
     private IActionResult Render(bool manager)
     {
@@ -27,13 +31,17 @@ public class AssistantController(ShopAssistant assistant) : Controller
         return View("Chat");
     }
 
-    private async Task<IActionResult> Reply(string? question, bool manager, bool widget, CancellationToken cancellation)
+    private async Task<IActionResult> Reply(string? question, bool manager, bool widget, string? previousQuestion,
+        string? previousAnswer, CancellationToken cancellation)
     {
         question = question?.Trim();
         if (question is null || question.Length is < 1 or > 500)
             return Failure("Nhập câu hỏi từ 1 đến 500 ký tự.", manager, widget, StatusCodes.Status400BadRequest);
 
-        var answer = await assistant.AskAsync(question, manager, cancellation);
+        if (previousQuestion?.Length > 500 || previousAnswer?.Length > 2000)
+            return Failure("Nội dung câu hỏi trước quá dài. Hãy mở lại trang để tiếp tục.", manager, widget, StatusCodes.Status400BadRequest);
+
+        var answer = await assistant.AskAsync(question, manager, cancellation, previousQuestion, previousAnswer);
         if (string.IsNullOrWhiteSpace(answer))
             return Failure("Trợ lý chưa phản hồi. Hãy kiểm tra Ollama hoặc thử lại sau.", manager, widget,
                 StatusCodes.Status503ServiceUnavailable);

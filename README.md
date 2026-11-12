@@ -45,6 +45,8 @@ Cài [Ollama cho Windows](https://docs.ollama.com/windows) và chạy `ollama pu
 
 Sau khi đăng nhập, bấm bong bóng **AI** ở góc dưới bên phải để mở chat. Kéo bong bóng hoặc dùng phím mũi tên khi nút đang được chọn để đổi vị trí. Khách có thể hỏi về sản phẩm và giá. Quản lý có thể hỏi về doanh thu 7 ngày, đơn chờ giao và hàng sắp hết. Chatbot chạy cục bộ, không cần API key, chỉ đọc dữ liệu và không nhận thông tin định danh khách hàng từ đơn hàng.
 
+Trợ lý lấy giá, tồn kho, voucher và số liệu quản lý mới khi có câu hỏi. Trong khung chat, câu trả lời tiếp theo có thể tham chiếu lượt hỏi đáp trước. Thử hỏi “Có đồ uống nào dưới 10k không?”, “SHOP10 giảm tối đa bao nhiêu?” hoặc “Đơn COD cần làm gì trước khi xác nhận đã thu tiền?”.
+
 ## Thanh toán thử qua MoMo sandbox
 
 MoMo sandbox chỉ dùng giao dịch thử. Lấy thông tin merchant test từ [MoMo Developers](https://developers.momo.vn/v3/docs/payment/api/wallet/onetime/) và đặt `Momo__PartnerCode`, `Momo__AccessKey`, `Momo__SecretKey`, `Momo__PublicBaseUrl` trong môi trường chạy ứng dụng. URL gốc phải là HTTPS công khai tới ứng dụng, để MoMo gọi `/Wallet/Notify`. Cấu hình triển khai cần cho phép hostname đó trong `AllowedHosts`. Giữ khóa sandbox ngoài Git.

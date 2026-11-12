@@ -14,6 +14,7 @@
     let drag;
     let ignoreClick = false;
     let customPosition = false;
+    let previousTurn;
 
     function placePanel() {
         if (panel.hidden) return;
@@ -123,6 +124,10 @@
 
         const payload = new URLSearchParams(new FormData(form));
         payload.set('question', text);
+        if (previousTurn) {
+            payload.set('previousQuestion', previousTurn.question);
+            payload.set('previousAnswer', previousTurn.answer);
+        }
         addMessage(text, ' assistant-message-user');
         const reply = addMessage('Đang trả lời…');
         question.value = '';
@@ -138,6 +143,7 @@
             } else {
                 const result = await response.json();
                 reply.textContent = response.ok ? result.answer : result.error;
+                if (response.ok) previousTurn = { question: text, answer: result.answer.slice(0, 2000) };
             }
         } catch {
             reply.textContent = 'Chưa kết nối được với trợ lý. Hãy thử lại.';
