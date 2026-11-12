@@ -43,7 +43,7 @@ Danh mục hiển thị số lượng đã bán từ các đơn hoàn tất và 
 
 Cài [Ollama cho Windows](https://docs.ollama.com/windows) và chạy `ollama pull qwen3:8b`. Ollama chạy tại cổng 11434. Có thể đặt biến `Ollama__Model` thành tên mô hình đã tải trước khi chạy ShopManager, ví dụ `qwen2.5:1.5b` cho máy ít RAM.
 
-Khách dùng **Tư vấn AI** để hỏi về sản phẩm và giá. Quản lý dùng **Trợ lý AI** để đọc doanh thu 7 ngày, đơn chờ giao và hàng sắp hết. Chatbot chạy cục bộ, không cần API key, chỉ đọc dữ liệu và không nhận thông tin định danh khách hàng từ đơn hàng.
+Sau khi đăng nhập, bấm bong bóng **AI** ở góc dưới bên phải để mở chat. Kéo bong bóng hoặc dùng phím mũi tên khi nút đang được chọn để đổi vị trí. Khách có thể hỏi về sản phẩm và giá. Quản lý có thể hỏi về doanh thu 7 ngày, đơn chờ giao và hàng sắp hết. Chatbot chạy cục bộ, không cần API key, chỉ đọc dữ liệu và không nhận thông tin định danh khách hàng từ đơn hàng.
 
 ## Thanh toán thử qua MoMo sandbox
 

@@ -1,0 +1,31 @@
+@model bool
+@{
+    var title = Model ? "Trợ lý quản lý" : "Tư vấn mua hàng";
+    var action = Model ? "Manage" : "Shop";
+}
+<div class="assistant-widget no-print" id="assistant-widget">
+    <button class="assistant-bubble" type="button" aria-label="Mở @title" aria-expanded="false"
+            aria-controls="assistant-panel" aria-describedby="assistant-move-hint" title="@title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M5 4.5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7L6 21v-4.5H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z" stroke-linejoin="round" />
+            <path d="M8 10.5h.01m3.99 0h.01m3.99 0h.01" stroke-linecap="round" stroke-width="2.5" />
+        </svg>
+        <span>AI</span>
+    </button>
+    <span id="assistant-move-hint" class="visually-hidden">Kéo bong bóng hoặc dùng phím mũi tên để đổi vị trí.</span>
+    <section class="assistant-panel" id="assistant-panel" aria-labelledby="assistant-title" hidden>
+        <header class="assistant-heading">
+            <h2 id="assistant-title">@title</h2>
+            <button type="button" class="assistant-close" aria-label="Đóng chat">×</button>
+        </header>
+        <div class="assistant-messages" role="log" aria-label="Tin nhắn">
+            <p class="assistant-message">@(Model ? "Bạn muốn hỏi về đơn chờ giao, tồn kho hay doanh thu 7 ngày?" : "Bạn muốn tìm sản phẩm gì? Bạn có thể cho mình biết nhu cầu và ngân sách.")</p>
+        </div>
+        <form class="assistant-form" asp-controller="Assistant" asp-action="@action" method="post">
+            <input type="hidden" name="widget" value="true" />
+            <label class="visually-hidden" for="assistant-question">Câu hỏi</label>
+            <textarea class="form-control" id="assistant-question" name="question" maxlength="500" rows="2" placeholder="Nhập câu hỏi…" required></textarea>
+            <button class="btn btn-primary" type="submit">Gửi</button>
+        </form>
+    </section>
+</div>

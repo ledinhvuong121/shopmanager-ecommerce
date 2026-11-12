@@ -19,7 +19,6 @@
                 @if (customer)
                 {
                     <a asp-controller="Orders" asp-action="Index">Đơn của tôi</a>
-                    <a asp-controller="Assistant" asp-action="Shop">Tư vấn AI</a>
                     <a asp-controller="Account" asp-action="ChangePassword">Đổi mật khẩu</a>
                     <form asp-controller="Account" asp-action="Logout" method="post"><button class="logout" type="submit">Đăng xuất</button></form>
                 }
@@ -55,7 +54,6 @@ else if (User.Identity?.IsAuthenticated == true)
                 <a class="@(current == "Inventory" ? "active" : "")" asp-controller="Inventory" asp-action="Index"><span>⇄</span> Kho hàng</a>
             }
             <a class="@(current == "Customers" ? "active" : "")" asp-controller="Customers" asp-action="Index"><span>♧</span> Khách hàng</a>
-            @if (manager) { <a asp-controller="Assistant" asp-action="Manage"><span>✦</span> Trợ lý AI</a> }
             @if (manager) { <a class="@(current == "Staff" ? "active" : "")" asp-controller="Staff" asp-action="Index"><span>♙</span> Nhân viên</a> }
             }
         </nav>
@@ -73,6 +71,11 @@ else if (User.Identity?.IsAuthenticated == true)
     </main>
     <footer class="app-footer no-print">ShopManager <span>•</span> @(storefront ? "Thanh toán khi nhận hàng" : "Quản lý đơn giản, bán hàng thuận tiện.")</footer>
 </div>
+@if (manager || customer)
+{
+    <partial name="_AssistantWidget" model="manager" />
+    <script src="~/js/assistant-widget.js" asp-append-version="true" defer></script>
+}
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", required: false)
