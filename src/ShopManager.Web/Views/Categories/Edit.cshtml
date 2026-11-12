@@ -1,0 +1,3 @@
+@model CategoryForm
+@{ ViewData["Title"] = Model.Id == 0 ? "Thêm danh mục" : "Chỉnh sửa danh mục"; }
+<div class="page-heading"><h1>@ViewData["Title"]</h1></div><form method="post" class="panel form-panel"><input asp-for="Id" type="hidden" /><div asp-validation-summary="All" class="text-danger"></div><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" /><div class="form-actions"><button class="btn btn-primary">Lưu danh mục</button><a asp-action="Index" class="btn btn-outline-secondary">Quay lại</a></div></form>

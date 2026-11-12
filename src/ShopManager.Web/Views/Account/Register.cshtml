@@ -1,0 +1,16 @@
+@model CustomerRegistrationForm
+@{ ViewData["Title"] = "Đăng ký khách hàng"; }
+<section class="panel p-4 mx-auto" style="max-width: 32rem">
+    <h1 class="h3">Đăng ký khách hàng</h1>
+    <form asp-action="Register" method="post">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <div class="mb-3"><label asp-for="FullName" class="form-label"></label><input asp-for="FullName" autocomplete="name" class="form-control" /></div>
+        <div class="mb-3"><label asp-for="Email" class="form-label"></label><input asp-for="Email" autocomplete="email" class="form-control" /></div>
+        <div class="mb-3"><label asp-for="Phone" class="form-label"></label><input asp-for="Phone" type="tel" autocomplete="tel" class="form-control" /></div>
+        <div class="mb-3"><label asp-for="Password" class="form-label"></label><input asp-for="Password" autocomplete="new-password" class="form-control" /></div>
+        <div class="mb-3"><label asp-for="ConfirmPassword" class="form-label"></label><input asp-for="ConfirmPassword" autocomplete="new-password" class="form-control" /></div>
+        <p class="subtle">Mật khẩu cần ít nhất 10 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.</p>
+        <button type="submit" class="btn btn-primary">Đăng ký</button>
+        <a asp-action="Login" class="btn btn-link">Quay lại đăng nhập</a>
+    </form>
+</section>

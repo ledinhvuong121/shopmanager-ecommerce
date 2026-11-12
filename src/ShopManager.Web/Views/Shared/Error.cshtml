@@ -1,0 +1,3 @@
+@model ErrorViewModel
+@{ ViewData["Title"] = "Có lỗi xảy ra"; }
+<div class="panel form-panel"><h1>Chưa thể hoàn tất yêu cầu</h1><p>Hãy thử lại. Nếu lỗi tiếp diễn, kiểm tra kết nối cơ sở dữ liệu và nhật ký ứng dụng.</p><p class="subtle">Mã tra cứu: @Model.RequestId</p><a asp-controller="Home" asp-action="Index" class="btn btn-primary">Về trang chính</a></div>

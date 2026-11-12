@@ -1,0 +1,35 @@
+@model DashboardVm
+@{ ViewData["Title"] = "Tổng quan"; var vi = CultureInfo.GetCultureInfo("vi-VN"); var max = Model.Days.Count > 0 ? Math.Max(1, Model.Days.Max(x => x.Revenue)) : 1; }
+<div class="page-heading"><div><div class="eyebrow">BỨC TRANH KINH DOANH</div><h1>Tổng quan cửa hàng</h1><p>Theo dõi hoạt động bán hàng, bắt đầu một ngày hiệu quả.</p></div><a class="btn btn-primary" asp-controller="Orders" asp-action="Create">＋ Tạo đơn bán</a></div>
+<form method="get" class="filter-bar"><span class="filter-label">Khoảng thời gian</span><label class="visually-hidden" for="from">Từ ngày</label><input id="from" type="date" name="from" value="@Model.From.ToString("yyyy-MM-dd")" class="form-control" /><span>đến</span><label class="visually-hidden" for="to">Đến ngày</label><input id="to" type="date" name="to" value="@Model.To.ToString("yyyy-MM-dd")" class="form-control" /><button class="btn btn-outline-secondary">Áp dụng</button></form>
+<div class="stats-grid">
+    <article class="stat-card featured"><div class="stat-label">Doanh thu thuần <span>₫</span></div><strong>@Model.Revenue.ToString("N0", vi)<small> ₫</small></strong><p>Đơn hoàn tất trong khoảng đã chọn</p></article>
+    <article class="stat-card"><div class="stat-label">Đơn hoàn tất <span>▤</span></div><strong>@Model.OrderCount</strong><p>Đã ghi nhận thanh toán tiền mặt</p></article>
+    <article class="stat-card"><div class="stat-label">Giá trị đơn trung bình <span>↗</span></div><strong>@((Model.OrderCount > 0 ? Model.Revenue / Model.OrderCount : 0).ToString("N0", vi))<small> ₫</small></strong><p>Doanh thu / số đơn hoàn tất</p></article>
+    <article class="stat-card"><div class="stat-label">Sản phẩm kinh doanh <span>▦</span></div><strong>@Model.ProductCount</strong><p>Trong danh mục hiện tại</p></article>
+</div>
+<section class="panel mb-3">
+    <div class="panel-heading">
+        <h2>Đơn online chờ giao <span class="count-pill">@Model.AwaitingDeliveryCount</span></h2>
+        <a asp-controller="Orders" asp-action="Index" asp-route-status="@OrderStatus.AwaitingDelivery">Xem đơn chờ giao →</a>
+    </div>
+    <p class="subtle mb-0">Tính tất cả đơn đang chờ giao. Doanh thu cập nhật sau khi xác nhận đã giao và thu tiền.</p>
+</section>
+<div class="dashboard-grid">
+    <section class="panel"><div class="panel-heading"><h2>Doanh thu theo ngày</h2><span class="subtle">Đơn vị: VNĐ</span></div>
+    @if (Model.Days.Count == 0) { <div class="empty-state"><span>▥</span><h3>Chưa có doanh thu</h3><p>Tạo đơn bán đầu tiên để bắt đầu theo dõi.</p><a asp-controller="Orders" asp-action="Create" class="btn btn-soft">Bắt đầu bán hàng →</a></div> }
+    else { <div class="revenue-chart">@foreach (var day in Model.Days) { <div class="revenue-row"><span>@day.Date.ToString("dd/MM")</span><div class="bar-track"><div class="bar" style="width:@((day.Revenue / max * 100).ToString("0.##", CultureInfo.InvariantCulture))%"></div></div><strong>@day.Revenue.ToString("N0", vi)</strong></div> }</div> }
+    </section>
+    <section class="panel"><div class="panel-heading"><h2>Sản phẩm bán chạy</h2><span class="subtle">Top 5</span></div>
+    @if (Model.TopProducts.Count == 0) { <div class="empty-state compact"><span>☆</span><p>Sản phẩm bán chạy sẽ xuất hiện sau đơn hàng đầu tiên.</p></div> }
+    else { var rank = 1; foreach (var product in Model.TopProducts) { <div class="rank-row"><span class="rank">@(rank++)</span><div><strong>@product.Name</strong><small>Đã bán @product.Quantity sản phẩm</small></div><b>@product.Revenue.ToString("N0", vi) ₫</b></div> } }
+    </section>
+    <section class="panel"><div class="panel-heading"><h2>Đơn hàng gần đây</h2><a asp-controller="Orders" asp-action="Index">Xem tất cả →</a></div><div class="table-responsive"><table class="table"><thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Tổng tiền</th><th>Trạng thái</th></tr></thead><tbody>
+    @foreach (var order in Model.RecentOrders) { <tr><td><a asp-controller="Orders" asp-action="Details" asp-route-id="@order.Id">@order.Code</a></td><td>@order.CustomerName</td><td class="money">@order.Total.ToString("N0", vi) ₫</td><td><span class="badge-status @(order.Status == OrderStatus.Completed ? "success" : "muted")">@(order.Status == OrderStatus.Completed ? "Hoàn tất" : order.Status == OrderStatus.AwaitingDelivery ? "Chờ giao hàng" : "Đã hủy")</span></td></tr> }
+    @if (Model.RecentOrders.Count == 0) { <tr><td colspan="4" class="empty-cell">Chưa có đơn hàng.</td></tr> }
+    </tbody></table></div></section>
+    <section class="panel"><div class="panel-heading"><h2>Cần bổ sung hàng</h2><span class="badge-status warning">Tồn thấp</span></div>
+    @foreach (var p in Model.LowStock) { <div class="stock-row"><div><strong>@p.Name</strong><small>@p.Sku</small></div><span class="stock-count">@p.Stock còn lại</span><a aria-label="Nhập kho @p.Name" asp-controller="Inventory" asp-action="Receive" asp-route-productId="@p.Id">＋</a></div> }
+    @if (Model.LowStock.Count == 0) { <div class="empty-state compact"><p>Tồn kho đang ở mức tốt.</p></div> }
+    </section>
+</div>

@@ -1,0 +1,60 @@
+@model SaleOrder
+@if (TempData["CompletedCart"] is string cartRequest)
+{
+    <span hidden data-completed-cart="@cartRequest"
+          data-cart-key="@("shopmanager-cart:" + User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)"></span>
+}
+@{ ViewData["Title"] = Model.Code; var pending = Model.Status == OrderStatus.AwaitingDelivery; var vi = CultureInfo.GetCultureInfo("vi-VN"); }
+<div class="page-heading no-print"><div><a asp-action="Index" class="back-link">← Danh sách đơn hàng</a><h1>Chi tiết đơn @Model.Code</h1></div><button type="button" class="btn btn-primary" id="print-invoice">In hóa đơn</button></div>
+<article class="panel invoice"><div class="invoice-heading"><div><span class="invoice-brand">ShopManager</span><p>@(pending ? "PHIẾU ĐẶT HÀNG" : "PHIẾU BÁN HÀNG")</p></div><div class="text-end"><h2>@Model.Code</h2><p>@VietnamTime.Format(Model.CreatedAt)</p><span class="badge-status @(Model.Status == OrderStatus.Completed ? "success" : "muted")">@(Model.Status == OrderStatus.Completed ? "Đã thanh toán" : pending ? "Chờ giao hàng" : "Đã hủy")</span></div></div><div class="invoice-parties"><div><span>KHÁCH HÀNG</span><strong>@Model.CustomerName</strong><small>@Model.CustomerPhone</small>@if (Model.ShippingAddress is not null) { <small>Giao đến @Model.ShippingAddress</small> }</div><div><span>NGƯỜI ĐẶT / LẬP ĐƠN</span><strong>@Model.CreatedBy.FullName</strong><small>Phương thức: Tiền mặt</small></div></div><div class="table-responsive"><table class="table"><thead><tr><th>Sản phẩm</th><th class="text-end">Đơn giá</th><th class="text-end">Số lượng</th><th class="text-end">Thành tiền</th></tr></thead><tbody>@foreach (var item in Model.Items) { <tr><td><strong>@item.ProductName</strong><small class="d-block subtle">@item.Sku</small></td><td class="text-end">@item.UnitPrice.ToString("N0", vi)</td><td class="text-end">@item.Quantity</td><td class="text-end money">@item.LineTotal.ToString("N0", vi) ₫</td></tr> }</tbody></table></div><div class="invoice-totals">
+@if (Model.VoucherCode is not null)
+{
+    <div><span>Tạm tính</span><span>@((Model.Total + Model.Discount).ToString("N0", vi)) ₫</span></div>
+    <div><span>Voucher @Model.VoucherCode</span><span>−@Model.Discount.ToString("N0", vi) ₫</span></div>
+}
+<div><span>Tổng thanh toán</span><strong>@Model.Total.ToString("N0", vi) ₫</strong></div>@if (Model.CashReceived > 0) { <div><span>Tiền khách đưa</span><span>@Model.CashReceived.ToString("N0", vi) ₫</span></div><div><span>Tiền trả lại</span><span>@Model.Change.ToString("N0", vi) ₫</span></div> }</div>
+@if (Model.Status == OrderStatus.Cancelled) { <div class="alert alert-warning">Đã hủy lúc @VietnamTime.Format(Model.CancelledAt!.Value). Lý do: @Model.CancelReason</div> }
+<p class="invoice-thanks">Cảm ơn bạn đã mua hàng!<small>Phiếu bán hàng nội bộ, không thay thế hóa đơn điện tử theo quy định.</small></p></article>
+@if (pending)
+{
+    <div class="alert alert-info">Đơn đang chờ giao hàng. Thanh toán tiền mặt khi nhận hàng.</div>
+    @if (User.IsInRole(Roles.Manager))
+    {
+        <form method="post" asp-action="CompleteDelivery" asp-route-id="@Model.Id" class="mb-3">
+            <button class="btn btn-primary">Xác nhận đã nhận đủ tiền và giao hàng</button>
+        </form>
+    }
+}
+@if (User.IsInRole(Roles.Manager) && Model.Status != OrderStatus.Cancelled) { <section class="panel cancel-panel no-print"><h2>Hủy đơn hàng</h2><p>Toàn bộ sản phẩm sẽ được hoàn lại tồn kho. @if (!pending) { <text>Kiểm tra việc hoàn tiền mặt cho khách trước khi hoàn tất.</text> }</p><form method="post" asp-action="Cancel" asp-route-id="@Model.Id" data-confirm="Hủy đơn này và hoàn lại toàn bộ tồn kho?"><label for="reason" class="form-label">Lý do hủy</label><textarea id="reason" name="reason" required maxlength="500" rows="2" class="form-control" placeholder="Nhập lý do hủy đơn…"></textarea><button class="btn btn-outline-danger mt-3">Hủy đơn và hoàn kho</button></form></section> }
+
+@if (User.IsInRole(Roles.Customer) && Model.Status == OrderStatus.Completed)
+{
+    var reviewed = (HashSet<int>)ViewBag.ReviewedProducts;
+    <section class="panel cancel-panel no-print">
+        <h2>Đánh giá sản phẩm</h2>
+        @foreach (var item in Model.Items)
+        {
+            <div class="border-top mt-3 pt-3">
+                <a asp-action="Reviews" asp-route-id="@item.ProductId">@item.ProductName</a>
+                @if (reviewed.Contains(item.ProductId))
+                {
+                    <p class="mb-0">Bạn đã đánh giá sản phẩm này.</p>
+                }
+                else
+                {
+                    <form method="post" asp-action="Review" asp-route-id="@Model.Id" class="mt-2">
+                        <input type="hidden" name="productId" value="@item.ProductId" />
+                        <label for="rating-@item.ProductId" class="form-label">Xếp hạng</label>
+                        <select id="rating-@item.ProductId" name="rating" class="form-select" required>
+                            <option value="">Chọn số sao</option>
+                            @for (var stars = 5; stars >= 1; stars--) { <option value="@stars">@stars sao</option> }
+                        </select>
+                        <label for="comment-@item.ProductId" class="form-label mt-2">Nhận xét</label>
+                        <textarea id="comment-@item.ProductId" name="comment" class="form-control" maxlength="500" rows="2"></textarea>
+                        <button class="btn btn-primary mt-2">Gửi đánh giá</button>
+                    </form>
+                }
+            </div>
+        }
+    </section>
+}
