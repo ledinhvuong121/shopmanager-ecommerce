@@ -45,6 +45,12 @@ Cài [Ollama cho Windows](https://docs.ollama.com/windows) và chạy `ollama pu
 
 Khách dùng **Tư vấn AI** để hỏi về sản phẩm và giá. Quản lý dùng **Trợ lý AI** để đọc doanh thu 7 ngày, đơn chờ giao và hàng sắp hết. Chatbot chạy cục bộ, không cần API key, chỉ đọc dữ liệu và không nhận thông tin định danh khách hàng từ đơn hàng.
 
+## Thanh toán thử qua MoMo sandbox
+
+MoMo sandbox chỉ dùng giao dịch thử. Lấy thông tin merchant test từ [MoMo Developers](https://developers.momo.vn/v3/docs/payment/api/wallet/onetime/) và đặt `Momo__PartnerCode`, `Momo__AccessKey`, `Momo__SecretKey`, `Momo__PublicBaseUrl` trong môi trường chạy ứng dụng. URL gốc phải là HTTPS công khai tới ứng dụng, để MoMo gọi `/Wallet/Notify`. Cấu hình triển khai cần cho phép hostname đó trong `AllowedHosts`. Giữ khóa sandbox ngoài Git.
+
+Áp dụng migration bằng `./Initialize.ps1 -MigrateOnly` trước khi chạy phiên bản này. Chọn ví MoMo khi đặt đơn, rồi mở trang thanh toán thử từ chi tiết đơn. ShopManager giữ tồn khi đặt đơn, chỉ chuyển sang chờ giao sau khi nhận thông báo thành công có chữ ký hợp lệ. Các mã thất bại cuối được hỗ trợ sẽ hủy đơn và hoàn tồn. Khi trạng thái chưa rõ, quản lý đối soát trong sandbox trước khi xử lý. Tích hợp chưa có hoàn tiền hoặc đối soát tự động và chỉ trỏ tới máy chủ thử của MoMo.
+
 ## Cài đặt trên máy khác
 
 1. Cài .NET SDK 10 và SQL Server (Developer/Express hoặc LocalDB). Visual Studio phải hỗ trợ .NET 10; cũng có thể dùng VS Code.

@@ -1,3 +1,8 @@
+using System.Security.Cryptography;
+using System.Text;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using ShopManager.Web.Controllers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using ShopManager.Web.Data;
@@ -91,6 +96,49 @@ public class SalesTests(SqlFixture fixture) : IClassFixture<SqlFixture>
         Assert.Equal(order.Total, order.CashReceived);
         Assert.Equal(8, (await db.Products.FindAsync(product.Id))!.Stock);
         await Assert.ThrowsAsync<BusinessException>(() => service.CompleteDeliveryAsync(id));
+    }
+
+    [Fact]
+    public async Task Wallet_order_requires_signed_matching_notification_and_delivers_without_cash()
+    {
+        var product = await fixture.ProductAsync();
+        await using var db = fixture.Open();
+        var customer = await db.Users.FindAsync(fixture.UserId);
+        var form = Cart(product, 1);
+        form.ShippingAddress = "Địa chỉ kiểm thử";
+        form.PayWithMomo = true;
+        var service = new OrderService(db);
+        var id = await service.CheckoutAsync(form, fixture.UserId, customer);
+        var order = (await db.Orders.FindAsync(id))!;
+        Assert.Equal(OrderStatus.AwaitingPayment, order.Status);
+        await Assert.ThrowsAsync<BusinessException>(() => service.StartDeliveryAsync(id));
+        order.MomoStarted = true;
+        await db.SaveChangesAsync();
+
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Momo:PartnerCode"] = "TEST", ["Momo:AccessKey"] = "access",
+            ["Momo:SecretKey"] = "secret", ["Momo:PublicBaseUrl"] = "https://shop.example.com"
+        }).Build();
+        using var client = new HttpClient();
+        var controller = new WalletController(db, new MomoSandbox(client, config), service);
+        var key = form.RequestId.ToString("N");
+        var callback = new MomoNotification("TEST", key, key, 25000, "ShopManager", "momo_wallet",
+            12345, 0, "OK", "qr", 1000, "", new string('0', 64));
+        Assert.IsType<BadRequestResult>(await controller.Notify(callback, default));
+        Assert.Null(order.PaidAt);
+
+        var raw = $"accessKey=access&amount=25000&extraData=&message=OK&orderId={key}&orderInfo=ShopManager&orderType=momo_wallet&partnerCode=TEST&payType=qr&requestId={key}&responseTime=1000&resultCode=0&transId=12345";
+        var signature = Convert.ToHexString(HMACSHA256.HashData(Encoding.UTF8.GetBytes("secret"), Encoding.UTF8.GetBytes(raw)));
+        callback = callback with { Signature = signature };
+        Assert.IsType<NoContentResult>(await controller.Notify(callback, default));
+        Assert.IsType<NoContentResult>(await controller.Notify(callback, default));
+        Assert.Equal(OrderStatus.AwaitingDelivery, order.Status);
+        Assert.NotNull(order.PaidAt);
+        await service.StartDeliveryAsync(id);
+        await service.CompleteDeliveryAsync(id);
+        Assert.Equal(0, order.CashReceived);
+        Assert.Equal(9, (await db.Products.FindAsync(product.Id))!.Stock);
     }
 
     [Theory]

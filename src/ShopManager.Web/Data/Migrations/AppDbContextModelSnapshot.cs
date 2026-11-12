@@ -449,8 +449,21 @@ namespace ShopManager.Web.Data.Migrations
                         .HasPrecision(18)
                         .HasColumnType("decimal(18,0)");
 
+                    b.Property<string>("MomoPayUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.Property<bool>("MomoStarted")
+                        .HasColumnType("bit");
+
+                    b.Property<long?>("MomoTransactionId")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("PayWithMomo")
+                        .HasColumnType("bit");
 
                     b.Property<Guid>("RequestId")
                         .HasColumnType("uniqueidentifier");
@@ -483,6 +496,10 @@ namespace ShopManager.Web.Data.Migrations
                     b.HasIndex("CreatedById");
 
                     b.HasIndex("CustomerId");
+
+                    b.HasIndex("MomoTransactionId")
+                        .IsUnique()
+                        .HasFilter("[MomoTransactionId] IS NOT NULL");
 
                     b.HasIndex("RequestId")
                         .IsUnique();

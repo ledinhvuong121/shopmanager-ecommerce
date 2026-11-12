@@ -12,7 +12,7 @@ using ShopManager.Web.ViewModels;
 namespace ShopManager.Web.Controllers;
 
 [Authorize(Roles = Roles.BuyersAndEmployees)]
-public class OrdersController(AppDbContext db, OrderService service, UserManager<ApplicationUser> users) : Controller
+public class OrdersController(AppDbContext db, OrderService service, UserManager<ApplicationUser> users, MomoSandbox momo) : Controller
 {
     private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
     public async Task<IActionResult> Index(string? search, OrderStatus? status, int page = 1)
@@ -69,6 +69,8 @@ public class OrdersController(AppDbContext db, OrderService service, UserManager
                     if (onlineCustomer is null) return Challenge();
                     form.CustomerId = null;
                     form.CashReceived = 0;
+                    if (form.PayWithMomo && !momo.Enabled)
+                        throw new BusinessException("MoMo sandbox chưa được cấu hình.");
                 }
                 var id = await service.CheckoutAsync(form, UserId, onlineCustomer);
                 if (onlineCustomer is not null && !buyNow.HasValue)
@@ -163,7 +165,7 @@ public class OrdersController(AppDbContext db, OrderService service, UserManager
         try
         {
             await service.CompleteDeliveryAsync(id);
-            TempData["Success"] = "Đã xác nhận giao hàng và thu tiền.";
+            TempData["Success"] = "Đã xác nhận giao hàng thành công.";
         }
         catch (BusinessException ex) { TempData["Error"] = ex.Message; }
         catch (DbUpdateConcurrencyException) { TempData["Error"] = "Trạng thái đơn vừa thay đổi. Hãy kiểm tra lại."; }
@@ -172,6 +174,7 @@ public class OrdersController(AppDbContext db, OrderService service, UserManager
 
     private async Task Catalog()
     {
+        ViewBag.MomoEnabled = momo.Enabled;
         ViewBag.Products = await db.Products.AsNoTracking().Include(x => x.Category).Where(x => x.IsActive && x.Stock > 0).OrderBy(x => x.Name).ToListAsync();
         if (!User.IsInRole(Roles.Employees))
         {

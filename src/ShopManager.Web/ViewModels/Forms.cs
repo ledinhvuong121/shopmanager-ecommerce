@@ -58,6 +58,7 @@ public class CheckoutForm
     [StringLength(300), Display(Name = "Địa chỉ giao hàng")] public string? ShippingAddress { get; set; }
     [Range(typeof(decimal), "0", "1000000000000000"), Display(Name = "Tiền khách đưa (₫)")] public decimal CashReceived { get; set; }
     [StringLength(32), Display(Name = "Mã voucher")] public string? VoucherCode { get; set; }
+    public bool PayWithMomo { get; set; }
     public List<CartLine> Lines { get; set; } = [];
 }
 public class CustomerRegistrationForm

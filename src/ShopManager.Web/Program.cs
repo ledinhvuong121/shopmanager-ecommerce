@@ -46,6 +46,11 @@ builder.Services.AddHttpClient<ShopAssistant>(client =>
     client.BaseAddress = new Uri("http://127.0.0.1:11434/");
     client.Timeout = TimeSpan.FromSeconds(90);
 });
+builder.Services.AddHttpClient<MomoSandbox>(client =>
+{
+    client.BaseAddress = new Uri("https://test-payment.momo.vn/");
+    client.Timeout = TimeSpan.FromSeconds(20);
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<ReportService>();
 CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;

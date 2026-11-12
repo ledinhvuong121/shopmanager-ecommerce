@@ -103,6 +103,14 @@ else { <a asp-action="Index" class="btn btn-outline-secondary">Lịch sử đơn
     <div class="cart-customer">
         <label asp-for="ShippingAddress" class="form-label"></label>
         <textarea asp-for="ShippingAddress" class="form-control" autocomplete="street-address" maxlength="300" rows="2" required></textarea>
+        @if (ViewBag.MomoEnabled is true)
+        {
+            <label asp-for="PayWithMomo" class="form-label mt-3">Phương thức thanh toán</label>
+            <select asp-for="PayWithMomo" class="form-select">
+                <option value="false">Tiền mặt khi nhận hàng (COD)</option>
+                <option value="true">Ví MoMo (sandbox)</option>
+            </select>
+        }
     </div>
 }
 <div id="cart-items" aria-live="polite"></div><div id="cart-inputs"></div><div class="cart-totals">

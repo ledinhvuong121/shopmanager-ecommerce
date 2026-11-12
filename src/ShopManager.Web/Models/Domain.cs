@@ -46,7 +46,7 @@ public class Customer
     [MaxLength(250)] public string? Address { get; set; }
 }
 
-public enum OrderStatus { Completed, Cancelled, AwaitingDelivery, OutForDelivery }
+public enum OrderStatus { Completed, Cancelled, AwaitingDelivery, OutForDelivery, AwaitingPayment }
 public enum MovementType { Receipt, Sale, Cancellation }
 
 public class SaleOrder
@@ -63,6 +63,10 @@ public class SaleOrder
     [MaxLength(20)] public string? CustomerPhone { get; set; }
     [MaxLength(300)] public string? ShippingAddress { get; set; }
     public DateTime? PaidAt { get; set; }
+    public bool PayWithMomo { get; set; }
+    public bool MomoStarted { get; set; }
+    [MaxLength(2048)] public string? MomoPayUrl { get; set; }
+    public long? MomoTransactionId { get; set; }
     [MaxLength(32)] public string? VoucherCode { get; set; }
     public decimal Discount { get; set; }
     public decimal Total { get; set; }

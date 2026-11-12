@@ -27,6 +27,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         });
         b.Entity<SaleOrder>().HasIndex(x => x.RequestId).IsUnique();
         b.Entity<SaleOrder>().HasIndex(x => x.CreatedAt);
+        b.Entity<SaleOrder>().HasIndex(x => x.MomoTransactionId).IsUnique();
         b.Entity<ProductReview>().HasKey(x => new { x.ProductId, x.UserId });
         b.Entity<ProductReview>().ToTable(t => t.HasCheckConstraint("CK_ProductReview_Rating", "[Rating] BETWEEN 1 AND 5"));
         b.Entity<SaleOrder>().Property(x => x.Discount).HasPrecision(18, 0);

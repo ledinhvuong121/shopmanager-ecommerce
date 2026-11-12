@@ -39,6 +39,7 @@ public class OrderService(AppDbContext db)
         var products = await db.Products.Where(x => ids.Contains(x.Id)).OrderBy(x => x.Id).ToDictionaryAsync(x => x.Id);
         var customer = form.CustomerId.HasValue ? await db.Customers.FindAsync(form.CustomerId.Value) : null;
         if (form.CustomerId.HasValue && customer == null) throw new BusinessException("Khách hàng không tồn tại.");
+        var wallet = onlineCustomer is not null && form.PayWithMomo;
         var order = new SaleOrder
         {
             RequestId = form.RequestId, CreatedById = userId, CustomerId = customer?.Id,
@@ -46,7 +47,9 @@ public class OrderService(AppDbContext db)
             CustomerPhone = onlineCustomer?.PhoneNumber ?? customer?.Phone,
             ShippingAddress = onlineCustomer is null ? null : form.ShippingAddress!.Trim(),
             CashReceived = onlineCustomer is null ? form.CashReceived : 0,
-            Status = onlineCustomer is null ? OrderStatus.Completed : OrderStatus.AwaitingDelivery
+            PayWithMomo = wallet,
+            Status = wallet ? OrderStatus.AwaitingPayment :
+                onlineCustomer is null ? OrderStatus.Completed : OrderStatus.AwaitingDelivery
         };
         foreach (var line in form.Lines.OrderBy(x => x.ProductId))
         {
@@ -65,6 +68,8 @@ public class OrderService(AppDbContext db)
             order.Discount = Math.Min(VoucherLimit, decimal.Truncate(subtotal * VoucherPercent / 100));
         }
         order.Total = subtotal - order.Discount;
+        if (wallet && order.Total is < 1000 or > 50000000)
+            throw new BusinessException("MoMo sandbox hỗ trợ đơn từ 1.000 đến 50.000.000 ₫.");
         if (onlineCustomer is null && order.Total > order.CashReceived) throw new BusinessException("Tiền khách đưa chưa đủ thanh toán.");
         db.Orders.Add(order);
         await db.SaveChangesAsync();
@@ -86,18 +91,26 @@ public class OrderService(AppDbContext db)
         var order = await db.Orders.FindAsync(orderId);
         if (order is null || order.Status != OrderStatus.OutForDelivery)
             throw new BusinessException("Chỉ xác nhận giao thành công khi đơn đang giao.");
-        order.CashReceived = order.Total;
-        order.PaidAt = DateTime.UtcNow;
+        if (order.PayWithMomo && order.PaidAt is null)
+            throw new BusinessException("Đơn MoMo chưa thanh toán.");
+        if (!order.PayWithMomo)
+        {
+            order.CashReceived = order.Total;
+            order.PaidAt = DateTime.UtcNow;
+        }
         order.Status = OrderStatus.Completed;
         await db.SaveChangesAsync();
     }
 
-    public async Task CancelAsync(int orderId, string reason, string userId)
+    public async Task CancelAsync(int orderId, string reason, string userId, bool momoDeclined = false)
     {
         if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length > 500) throw new BusinessException("Nhập lý do hủy từ 1 đến 500 ký tự.");
         await using var transaction = await db.Database.BeginTransactionAsync();
         var order = await db.Orders.Include(x => x.Items).SingleOrDefaultAsync(x => x.Id == orderId)
             ?? throw new BusinessException("Không tìm thấy đơn hàng.");
+        if (order.PayWithMomo && order.MomoStarted
+            && !(momoDeclined && order.Status == OrderStatus.AwaitingPayment && order.PaidAt is null))
+            throw new BusinessException("Đơn đã gửi sang MoMo. Chờ kết quả hoặc đối soát trên sandbox trước khi hủy.");
         if (order.Status == OrderStatus.Cancelled) throw new BusinessException("Đơn đã hủy, không thể hoàn kho lần nữa.");
         var ids = order.Items.Select(x => x.ProductId).ToList();
         var products = await db.Products.Where(x => ids.Contains(x.Id)).OrderBy(x => x.Id).ToDictionaryAsync(x => x.Id);
