@@ -4,7 +4,8 @@
     var customer = User.IsInRole(Roles.Customer);
     var storefront = guest || customer;
     var cartOnly = ViewBag.CartOnly is true;
-    var cartKey = guest ? "shopmanager-cart:guest" :
+    var buyNow = ViewBag.BuyNow as int?;
+    var cartKey = buyNow.HasValue ? null : guest ? "shopmanager-cart:guest" :
         customer ? "shopmanager-cart:" + User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value : null;
     var unitsSold = ViewBag.UnitsSold as Dictionary<int, long>;
     var ratings = ViewBag.Ratings as Dictionary<int, ProductRating>;
@@ -66,8 +67,25 @@ else { <a asp-action="Index" class="btn btn-outline-secondary">Lịch sử đơn
 {
     var image = ProductImages.Find(p.Sku);
     <div class="catalog-entry">
+    @if (storefront)
+    {
+        <div class="catalog-card" data-id="@p.Id" data-category="@p.CategoryId" data-search="@p.Name @p.Sku">
+            <div class="catalog-art art-@(p.CategoryId % 4)">
+                @if (image is not null) { <img class="catalog-photo" src="@image" alt="" loading="lazy" /> }
+                <small>@p.Category.Name</small>
+            </div>
+            <div class="catalog-info"><small>@p.Sku · Còn @p.Stock</small><strong>@p.Name</strong><span>@p.Price.ToString("N0", vi) ₫</span></div>
+        </div>
+        <div class="shop-product-actions">
+            <button type="button" class="btn btn-outline-secondary shop-add-button" data-add-product="@p.Id">Thêm vào giỏ</button>
+            <a class="btn btn-primary" asp-action="Create" asp-route-buyNow="@p.Id">Mua ngay</a>
+        </div>
+    }
+    else
+    {
     <button type="button" class="catalog-card" data-id="@p.Id" data-category="@p.CategoryId" data-search="@p.Name @p.Sku"><div class="catalog-art art-@(p.CategoryId % 4)">@if (image is not null) { <img class="catalog-photo" src="@image" alt="" loading="lazy" referrerpolicy="no-referrer" /> }
-    else { <span aria-hidden="true">▦</span> }<small>@p.Category.Name</small><b>＋</b></div><div class="catalog-info"><small>@p.Sku · Còn @p.Stock</small><strong>@p.Name</strong><span>@p.Price.ToString("N0", vi) ₫</span>@if (storefront) { <span class="shop-add">Thêm vào giỏ</span> }</div></button>
+    else { <span aria-hidden="true">▦</span> }<small>@p.Category.Name</small><b>＋</b></div><div class="catalog-info"><small>@p.Sku · Còn @p.Stock</small><strong>@p.Name</strong><span>@p.Price.ToString("N0", vi) ₫</span></div></button>
+    }
     @if (storefront)
     {
         <div class="catalog-feedback">
@@ -80,7 +98,7 @@ else { <a asp-action="Index" class="btn btn-outline-secondary">Lịch sử đơn
     </div>
 }
 </div><div id="no-products" class="empty-state" hidden="@(products.Count > 0)"><h3>Không có sản phẩm phù hợp</h3><p>Thử từ khóa khác.</p></div></section>
-<form method="post" asp-action="Create" asp-route-cartOnly="@cartOnly" id="checkout-form" data-cart-key="@cartKey" data-guest="@guest.ToString().ToLowerInvariant()" class="panel cart-panel" hidden="@(storefront && !cartOnly)"><input asp-for="RequestId" type="hidden" /><div class="panel-heading"><h2>Giỏ hàng <span id="cart-count" class="count-pill">0</span></h2><button id="clear-cart" type="button" class="btn btn-link btn-sm">Xóa giỏ</button></div>@if (!storefront) { <div class="cart-customer"><label asp-for="CustomerId" class="form-label">Khách hàng</label><select asp-for="CustomerId" asp-items="ViewBag.Customers" class="form-select"><option value="">Khách vãng lai</option></select></div> }@if (customer)
+<form method="post" asp-action="Create" asp-route-cartOnly="@cartOnly" asp-route-buyNow="@buyNow" id="checkout-form" data-select-items="@(cartOnly && !buyNow.HasValue ? "true" : "false")" data-cart-key="@cartKey" data-guest="@guest.ToString().ToLowerInvariant()" class="panel cart-panel" hidden="@(storefront && !cartOnly)"><input asp-for="RequestId" type="hidden" /><div class="panel-heading"><h2>@(buyNow.HasValue ? "Mua ngay" : "Giỏ hàng") <span id="cart-count" class="count-pill">0</span></h2><button id="clear-cart" type="button" class="btn btn-link btn-sm" hidden="@buyNow.HasValue">Xóa giỏ</button></div>@if (!storefront) { <div class="cart-customer"><label asp-for="CustomerId" class="form-label">Khách hàng</label><select asp-for="CustomerId" asp-items="ViewBag.Customers" class="form-select"><option value="">Khách vãng lai</option></select></div> }@if (customer)
 {
     <div class="cart-customer">
         <label asp-for="ShippingAddress" class="form-label"></label>

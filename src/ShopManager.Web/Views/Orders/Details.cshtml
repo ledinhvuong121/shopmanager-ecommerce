@@ -1,7 +1,7 @@
 @model SaleOrder
 @if (TempData["CompletedCart"] is string cartRequest)
 {
-    <span hidden data-completed-cart="@cartRequest"
+    <span hidden data-completed-cart="@cartRequest" data-purchased-products="@TempData["PurchasedProducts"]"
           data-cart-key="@("shopmanager-cart:" + User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)"></span>
 }
 @{ ViewData["Title"] = Model.Code; var pending = Model.Status == OrderStatus.AwaitingDelivery; var vi = CultureInfo.GetCultureInfo("vi-VN"); }

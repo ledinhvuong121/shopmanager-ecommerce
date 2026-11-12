@@ -30,16 +30,34 @@ public class OrdersController(AppDbContext db, OrderService service, UserManager
         return View(await Paging.CreateAsync(query.OrderByDescending(x => x.CreatedAt), page, search));
     }
     [AllowAnonymous, HttpGet]
-    public async Task<IActionResult> Create(bool cartOnly = false)
+    public async Task<IActionResult> Create(bool cartOnly = false, int? buyNow = null)
     {
-        ViewBag.CartOnly = cartOnly && !User.IsInRole(Roles.Employees);
+        if (buyNow.HasValue)
+        {
+            if (User.Identity?.IsAuthenticated != true)
+                return RedirectToAction("Login", "Account", new { returnUrl = Url.Action(nameof(Create), new { buyNow }) });
+            if (!User.IsInRole(Roles.Customer)) return Forbid();
+        }
+        ViewBag.CartOnly = (cartOnly || buyNow.HasValue) && !User.IsInRole(Roles.Employees);
+        ViewBag.BuyNow = buyNow;
         await Catalog();
-        return View(new CheckoutForm());
+        var form = new CheckoutForm();
+        if (buyNow.HasValue)
+        {
+            var product = ((List<Product>)ViewBag.Products).SingleOrDefault(x => x.Id == buyNow);
+            if (product is null) return NotFound();
+            form.Lines.Add(new CartLine { ProductId = product.Id, Quantity = 1, ExpectedPrice = product.Price });
+        }
+        return View(form);
     }
     [HttpPost]
-    public async Task<IActionResult> Create(CheckoutForm form, bool cartOnly = false)
+    public async Task<IActionResult> Create(CheckoutForm form, bool cartOnly = false, int? buyNow = null)
     {
-        ViewBag.CartOnly = cartOnly && User.IsInRole(Roles.Customer);
+        ViewBag.CartOnly = (cartOnly || buyNow.HasValue) && User.IsInRole(Roles.Customer);
+        ViewBag.BuyNow = buyNow;
+        if (buyNow.HasValue && (!User.IsInRole(Roles.Customer)
+            || form.Lines.Count != 1 || form.Lines[0].ProductId != buyNow))
+            return BadRequest();
         if (ModelState.IsValid)
         {
             try
@@ -53,7 +71,11 @@ public class OrdersController(AppDbContext db, OrderService service, UserManager
                     form.CashReceived = 0;
                 }
                 var id = await service.CheckoutAsync(form, UserId, onlineCustomer);
-                if (onlineCustomer is not null) TempData["CompletedCart"] = form.RequestId.ToString();
+                if (onlineCustomer is not null && !buyNow.HasValue)
+                {
+                    TempData["CompletedCart"] = form.RequestId.ToString();
+                    TempData["PurchasedProducts"] = string.Join(",", form.Lines.Select(x => x.ProductId));
+                }
                 return RedirectToAction(nameof(Details), new { id });
             }
             catch (BusinessException ex) { ModelState.AddModelError("", ex.Message); }

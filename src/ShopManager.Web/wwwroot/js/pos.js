@@ -4,6 +4,7 @@
     const form = document.getElementById('checkout-form');
     const cartKey = form.dataset.cartKey;
     const guest = form.dataset.guest === 'true';
+    const selectItems = form.dataset.selectItems === 'true';
     const guestKey = 'shopmanager-cart:guest';
     const requestId = document.getElementById('RequestId').value;
     const cart = new Map();
@@ -15,11 +16,20 @@
             if (!product || !Number.isSafeInteger(line.quantity) || line.quantity < 1) continue;
             cart.set(line.productId, {
                 quantity: Math.min(product.stock, 1000000, line.quantity),
-                expectedPrice: product.price
+                expectedPrice: product.price,
+                selected: line.selected !== false
             });
         }
     };
-    if (initial.length) restore(initial);
+    if (initial.length) {
+        if (cartKey && selectItems) {
+            try {
+                restore(saved(cartKey));
+                for (const line of cart.values()) line.selected = false;
+            } catch { /* Storage may be unavailable. */ }
+        }
+        restore(initial.map(line => ({ ...line, selected: true })));
+    }
     else if (cartKey) {
         try {
             restore(saved(cartKey));
@@ -34,7 +44,8 @@
         } catch { /* Storage may be unavailable. */ }
     }
     const money = value => new Intl.NumberFormat('vi-VN').format(value) + ' ₫';
-    const total = () => [...cart].reduce((sum, [id, line]) => sum + products.get(id).price * line.quantity, 0);
+    const selectedLines = () => [...cart].filter(([, line]) => !selectItems || line.selected);
+    const total = () => selectedLines().reduce((sum, [id, line]) => sum + products.get(id).price * line.quantity, 0);
     const voucher = document.getElementById('VoucherCode');
     function updateTotal() {
         const subtotal = total();
@@ -74,8 +85,20 @@
             plus.onclick = () => { if (line.quantity < p.stock) { line.quantity++; render(); } else error.textContent = 'Số lượng đã bằng tồn kho hiện tại.'; };
             remove.onclick = () => { cart.delete(id); render(); };
             controls.append(minus, text('span', line.quantity), plus);
+            if (selectItems) {
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = line.selected;
+                checkbox.setAttribute('aria-label', 'Chọn mua ' + p.name);
+                checkbox.onchange = () => {
+                    line.selected = checkbox.checked;
+                    render();
+                    root.querySelectorAll('input[type="checkbox"]')[Array.from(cart.keys()).indexOf(id)]?.focus();
+                };
+                row.append(checkbox);
+            }
             row.append(info, controls, text('b', money(p.price * line.quantity)), remove); root.append(row);
-            fields.append(input(`Lines[${index}].ProductId`, id), input(`Lines[${index}].Quantity`, line.quantity), input(`Lines[${index}].ExpectedPrice`, line.expectedPrice)); index++;
+            if (!selectItems || line.selected) { fields.append(input(`Lines[${index}].ProductId`, id), input(`Lines[${index}].Quantity`, line.quantity), input(`Lines[${index}].ExpectedPrice`, line.expectedPrice)); index++; }
         }
         const itemCount = [...cart.values()].reduce((sum, line) => sum + line.quantity, 0);
         document.getElementById('cart-count').textContent = itemCount;
@@ -88,7 +111,7 @@
         }
         updateTotal();
         const checkout = document.getElementById('checkout-button');
-        if (checkout) checkout.disabled = !cart.size;
+        if (checkout) checkout.disabled = selectedLines().length === 0;
         if (cartKey) {
             try {
                 const lines = [...cart].map(([productId, line]) => ({ productId, ...line }));
@@ -111,15 +134,15 @@
         clearTimeout(noticeTimer);
         noticeTimer = setTimeout(() => { notice.hidden = true; }, 3000);
     }
-    document.querySelectorAll('.catalog-card').forEach(button => button.onclick = () => {
-        const id = Number(button.dataset.id), p = products.get(id), line = cart.get(id);
+    document.querySelectorAll('button.catalog-card, [data-add-product]').forEach(button => button.onclick = () => {
+        const id = Number(button.dataset.addProduct ?? button.dataset.id), p = products.get(id), line = cart.get(id);
         if (line && line.quantity >= p.stock) {
             const message = p.name + ' không đủ tồn kho.';
             error.textContent = message;
             announce(message);
             return;
         }
-        cart.set(id, { quantity: (line?.quantity || 0) + 1, expectedPrice: p.price }); render();
+        cart.set(id, { quantity: (line?.quantity || 0) + 1, expectedPrice: p.price, selected: true }); render();
         announce('Đã thêm ' + p.name + ' vào giỏ hàng.');
     });
     const normalize = value => value.toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
@@ -146,9 +169,9 @@
     }
     form.addEventListener('submit', event => {
         if (guest) { event.preventDefault(); return; }
-        if (!cart.size || (cash && Number(cash.value) < total())) {
+        if (!selectedLines().length || (cash && Number(cash.value) < total())) {
             event.preventDefault();
-            error.textContent = cart.size ? 'Tiền khách đưa phải đủ.' : 'Giỏ hàng chưa có sản phẩm.';
+            error.textContent = selectedLines().length ? 'Tiền khách đưa phải đủ.' : 'Chọn ít nhất một sản phẩm để đặt hàng.';
             return;
         }
         document.getElementById('checkout-button').disabled = true;
