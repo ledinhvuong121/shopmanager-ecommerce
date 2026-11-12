@@ -30,14 +30,16 @@ public class OrdersController(AppDbContext db, OrderService service, UserManager
         return View(await Paging.CreateAsync(query.OrderByDescending(x => x.CreatedAt), page, search));
     }
     [AllowAnonymous, HttpGet]
-    public async Task<IActionResult> Create()
+    public async Task<IActionResult> Create(bool cartOnly = false)
     {
+        ViewBag.CartOnly = cartOnly && !User.IsInRole(Roles.Employees);
         await Catalog();
         return View(new CheckoutForm());
     }
     [HttpPost]
-    public async Task<IActionResult> Create(CheckoutForm form)
+    public async Task<IActionResult> Create(CheckoutForm form, bool cartOnly = false)
     {
+        ViewBag.CartOnly = cartOnly && User.IsInRole(Roles.Customer);
         if (ModelState.IsValid)
         {
             try

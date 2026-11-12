@@ -4,4 +4,6 @@
 .catalog-photo { width: 100%; height: 100%; padding: 8px; object-fit: contain; background: #fff; }
 .catalog-feedback { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between; padding: 8px 4px; font-size: 12px; }
 
+.cart-page { max-width: 740px; }
+.cart-page .cart-panel { position: static; }
 

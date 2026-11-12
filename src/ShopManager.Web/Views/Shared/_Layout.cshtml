@@ -19,6 +19,7 @@ if (User.Identity?.IsAuthenticated == true)
             @if (customer)
             {
                 <a asp-controller="Orders" asp-action="Create"><span>▦</span> Mua hàng</a>
+                <a asp-controller="Orders" asp-action="Create" asp-route-cartOnly="true">Giỏ hàng</a>
                 <a asp-controller="Orders" asp-action="Index"><span>▤</span> Đơn của tôi</a>
             }
             else
